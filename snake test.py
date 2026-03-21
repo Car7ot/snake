@@ -12,6 +12,7 @@ CELL = 20
 
 MENU_BACKGROUND_IMAGE = "sarpe-1.png"
 GAME_BACKGROUND_IMAGE = "fon.png"
+current_food_skin = "RED"
 
 
 game_bg = pygame.image.load(GAME_BACKGROUND_IMAGE)
@@ -20,6 +21,8 @@ menu_bg = pygame.image.load(MENU_BACKGROUND_IMAGE)
 menu_bg = pygame.transform.scale(menu_bg, (WIDTH, HEIGHT))
 food_img = pygame.image.load("food.png")
 food_img = pygame.transform.scale(food_img, (CELL, CELL))
+gold_food_img = pygame.image.load("golden.png")
+gold_food_img = pygame.transform.scale(gold_food_img, (CELL, CELL))
 snake_head = pygame.image.load("head.png")
 snake_head = pygame.transform.scale(snake_head, (CELL, CELL))
 snake_body = pygame.image.load("snake.telo.png")
@@ -27,7 +30,29 @@ snake_body = pygame.transform.scale(snake_body, (CELL, CELL))
 snake_tail = pygame.image.load("snake.tail.png")
 snake_tail = pygame.transform.scale(snake_tail, (CELL, CELL))
 
+def game_over_screen(score, best, screen_width, screen_height):
+    # draw background
+    game_bg_scaled = pygame.transform.scale(game_bg, (screen_width, screen_height))
+    screen.blit(game_bg_scaled, (0, 0))
 
+    font_big = pygame.font.SysFont("Comic Sans MS", 50)
+    font_small = pygame.font.SysFont("Comic Sans MS", 30)
+
+    # надписи на английском
+    text1 = font_big.render("Game Over!", True, (255, 0, 0))
+    text2 = font_small.render(f"Best Score: {best}", True, (0, 255, 0))
+
+    # позиционирование по центру
+    text1_x = screen_width // 2 - text1.get_width() // 2
+    text1_y = screen_height // 2 - 60
+    text2_x = screen_width // 2 - text2.get_width() // 2
+    text2_y = screen_height // 2 + 10
+
+    screen.blit(text1, (text1_x, text1_y))
+    screen.blit(text2, (text2_x, text2_y))
+
+    pygame.display.update()
+    pygame.time.delay(3000)  # pause 3 seconds
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Snake PRO")
@@ -168,6 +193,8 @@ def settings():
             if back_btn.is_clicked(event):
                 return
 
+
+
         arrows_btn.color = GREEN if control_mode == "ARROWS" else GRAY
         wasd_btn.color = GREEN if control_mode == "WASD" else GRAY
         score_btn.color = GREEN if show_best_score else GRAY
@@ -250,7 +277,11 @@ def classic_game():
             random.randrange(0, HEIGHT, CELL))
 
     while True:
-        screen.blit(game_bg, (0, 0))
+        game_bg_scaled = pygame.transform.scale(
+            game_bg,
+            (WIDTH - WIDTH % CELL, HEIGHT - HEIGHT % CELL)
+        )
+        screen.blit(game_bg_scaled, (0, 0))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -274,8 +305,8 @@ def classic_game():
         if (head_x < 0 or head_x >= WIDTH or
                 head_y < 0 or head_y >= HEIGHT or
                 new_head in snake):
+            game_over_screen(apples_eaten, best_score, WIDTH, HEIGHT)
             break
-
         snake.insert(0, new_head)
 
         if new_head == food:
@@ -289,36 +320,83 @@ def classic_game():
 
         for i, segment in enumerate(snake):
 
+            for i, segment in enumerate(snake):
+                for i, segment in enumerate(snake):
+                    x, y = segment
+
+        for i, segment in enumerate(snake):
+            x, y = segment
+
+        for i, segment in enumerate(snake):
+            x, y = segment
+
+        for i, segment in enumerate(snake):
+            x, y = segment
+
+        for i, segment in enumerate(snake):
+            x, y = segment
 
             # ===== ГОЛОВА =====
             if i == 0:
-
                 if direction == "UP":
-                    img = pygame.transform.rotate(snake_head, 180)
-                elif direction == "DOWN":
                     img = snake_head
+                elif direction == "DOWN":
+                    img = pygame.transform.rotate(snake_head, 180)
                 elif direction == "LEFT":
-                    img = pygame.transform.rotate(snake_head, -90)
-                elif direction == "RIGHT":
                     img = pygame.transform.rotate(snake_head, 90)
+                elif direction == "RIGHT":
+                    img = pygame.transform.rotate(snake_head, -90)
+                screen.blit(img, (x, y))
 
-                screen.blit(img, segment)
+            # ===== ХВОСТ =====
+            elif i == len(snake) - 1:
+                prev_x, prev_y = snake[i - 1]
+
+                dx = prev_x - x
+                dy = prev_y - y
+
+                # Центрируем хвост по сегменту
+                tail_rect = snake_tail.get_rect()
+                tail_rect.topleft = (x, y)
+
+                if dx > 0:
+                    tail_img = pygame.transform.rotate(snake_tail, 0)
+                elif dx < 0:
+                    tail_img = pygame.transform.rotate(snake_tail, 180)
+                elif dy > 0:
+                    tail_img = pygame.transform.rotate(snake_tail, -90)
+                elif dy < 0:
+                    tail_img = pygame.transform.rotate(snake_tail, 90)
+
+
+                screen.blit(tail_img, (x, y))
 
             # ===== ТЕЛО =====
             else:
-
                 prev_x, prev_y = snake[i - 1]
-                curr_x, curr_y = segment
+                next_x, next_y = snake[i + 1]
 
-                if prev_x == curr_x:  # вертикально
-                    body_img = snake_body
-                else:  # горизонтально
+                if prev_y == next_y:
+                    body_img = pygame.transform.rotate(snake_body, 0)
+                elif prev_x == next_x:
                     body_img = pygame.transform.rotate(snake_body, 90)
+                else:  # углы
+                    if (prev_x < x and next_y < y) or (next_x < x and prev_y < y):
+                        body_img = pygame.transform.rotate(snake_body, 0)
+                    elif (prev_x < x and next_y > y) or (next_x < x and prev_y > y):
+                        body_img = pygame.transform.rotate(snake_body, 270)
+                    elif (prev_x > x and next_y < y) or (next_x > x and prev_y < y):
+                        body_img = pygame.transform.rotate(snake_body, 90)
+                    else:
+                        body_img = pygame.transform.rotate(snake_body, 180)
 
-                screen.blit(body_img, segment)
+                screen.blit(body_img, (x, y))
 
         if food:
-            screen.blit(food_img, food)
+            if current_food_skin == "RED":
+                screen.blit(food_img, food)
+            else:  # GOLD
+                screen.blit(gold_food_img, food)
 
         score_text = font.Font(None, 30).render(
             f"Score: {apples_eaten}", True, GREEN)
@@ -362,6 +440,10 @@ def custom_game():
                  random.randrange(0, game_height, CELL))
 
     while True:
+        game_bg_scaled = pygame.transform.scale(
+            game_bg,
+            (game_width - game_width % CELL, game_height - game_height % CELL)
+        )
         screen.blit(game_bg_scaled, (0, 0))
 
         for event in pygame.event.get():
@@ -389,8 +471,8 @@ def custom_game():
         if (head_x < 0 or head_x >= game_width or
                 head_y < 0 or head_y >= game_height or
                 new_head in snake):
+            game_over_screen(apples_eaten, best_score, game_width, game_height)
             break
-
         snake.insert(0, new_head)
 
         # ===== FOOD COLLISION =====
@@ -423,14 +505,74 @@ def custom_game():
             snake.pop()
 
         # ===== DRAW =====
-        for segment in snake:
-            draw.rect(screen, GREEN, (*segment, CELL, CELL))
+        for i, segment in enumerate(snake):
+            x, y = segment
 
+            # ===== ГОЛОВА =====
+            if i == 0:
+                if direction == "UP":
+                    img = snake_head
+                elif direction == "DOWN":
+                    img = pygame.transform.rotate(snake_head, 180)
+                elif direction == "LEFT":
+                    img = pygame.transform.rotate(snake_head, 90)
+                elif direction == "RIGHT":
+                    img = pygame.transform.rotate(snake_head, -90)
+                screen.blit(img, (x, y))
+
+            # ===== ХВОСТ =====
+            elif i == len(snake) - 1:
+                prev_x, prev_y = snake[i - 1]
+
+                dx = prev_x - x
+                dy = prev_y - y
+
+                if prev_x == x:  # вертикально
+                    if prev_y > y:
+                        tail_img = pygame.transform.rotate(snake_tail, -90)
+                    else:
+                        tail_img = pygame.transform.rotate(snake_tail, 90)
+                else:  # горизонтально
+                    if prev_x > x:
+                        tail_img = pygame.transform.rotate(snake_tail, 0)
+                    else:
+                        tail_img = pygame.transform.rotate(snake_tail, 180)
+
+                screen.blit(tail_img, (x, y))
+
+            # ===== ТЕЛО =====
+            else:
+                prev_x, prev_y = snake[i - 1]
+                next_x, next_y = snake[i + 1]
+
+                if prev_y == next_y:
+                    body_img = pygame.transform.rotate(snake_body, 0)
+                elif prev_x == next_x:
+                    body_img = pygame.transform.rotate(snake_body, 90)
+                else:
+                    if (prev_x < x and next_y < y) or (next_x < x and prev_y < y):
+                        body_img = pygame.transform.rotate(snake_body, 0)
+                    elif (prev_x < x and next_y > y) or (next_x < x and prev_y > y):
+                        body_img = pygame.transform.rotate(snake_body, 270)
+                    elif (prev_x > x and next_y < y) or (next_x > x and prev_y < y):
+                        body_img = pygame.transform.rotate(snake_body, 90)
+                    else:
+                        body_img = pygame.transform.rotate(snake_body, 180)
+
+                screen.blit(body_img, (x, y))
+        # Отрисовка первого яблока
         if food:
-            screen.blit(food_img, food)
+            if current_food_skin == "RED":
+                screen.blit(food_img, food)
+            else:  # GOLD
+                screen.blit(gold_food_img, food)
 
+        # Отрисовка второго яблока
         if food2:
-            draw.rect(screen, RED, (*food2, CELL, CELL))
+            if current_food_skin == "RED":
+                screen.blit(food_img, food2)
+            else:  # GOLD
+                screen.blit(gold_food_img, food2)
 
         score_text = font.Font(None, 30).render(
             f"Score: {apples_eaten}", True, GREEN)
@@ -445,6 +587,51 @@ def custom_game():
         clock.tick(speed)
 
     pygame.display.set_mode((WIDTH, HEIGHT))
+
+def skins_menu():
+    global current_food_skin
+
+    red_btn = Button(200, 150, 200, 50, GRAY, "Red Apple")
+    gold_btn = Button(200, 220, 200, 50, GRAY, "Gold Apple")
+    back_btn = Button(200, 290, 200, 50, GRAY, "BACK")
+
+    # маленькие иконки рядом с кнопками
+    red_icon = pygame.transform.scale(food_img, (30, 30))
+    gold_icon = pygame.transform.scale(gold_food_img, (30, 30))
+
+    while True:
+        screen.blit(menu_bg, (0, 0))
+
+        title = font_big.render("SKINS", True, GREEN)
+        screen.blit(title, (WIDTH // 2 - 80, 60))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if red_btn.is_clicked(event):
+                current_food_skin = "RED"
+
+            if gold_btn.is_clicked(event):
+                current_food_skin = "GOLD"
+
+            if back_btn.is_clicked(event):
+                return
+
+        # подсветка выбранной кнопки
+        red_btn.color = GREEN if current_food_skin == "RED" else GRAY
+        gold_btn.color = GREEN if current_food_skin == "GOLD" else GRAY
+
+        # отрисовка кнопок
+        for btn in [red_btn, gold_btn, back_btn]:
+            btn.draw()
+
+        # отрисовка иконок рядом с кнопками
+        screen.blit(red_icon, (red_btn.base_rect.x - 40, red_btn.base_rect.y + 10))
+        screen.blit(gold_icon, (gold_btn.base_rect.x - 40, gold_btn.base_rect.y + 10))
+
+        pygame.display.update()
 
 # ===== MODE SELECT =====
 def choose_mode():
@@ -480,16 +667,21 @@ def choose_mode():
 
 
 # ===== MAIN MENU =====
+# ===== MAIN MENU =====
+# ===== MAIN MENU =====
 def menu():
-    play_btn = Button(110, 150, 200, 50, GRAY, "PLAY")
-    settings_btn = Button(110, 220, 200, 50, GRAY, "SETTINGS")
-    exit_btn = Button(110, 290, 200, 50, GRAY, "EXIT")
+    # Кнопки
+    play_btn = Button(110, 120, 200, 50, GRAY, "PLAY")      # выше
+    skins_btn = Button(110, 190, 200, 50, GRAY, "SKINS")    # под PLAY
+    settings_btn = Button(110, 260, 200, 50, GRAY, "SETTINGS")
+    exit_btn = Button(110, 330, 200, 50, GRAY, "EXIT")
 
     while True:
         screen.blit(menu_bg, (0, 0))
 
+        # Надпись SNAKE PRO поднята выше
         title = font_big.render("SNAKE PRO", True, GREEN)
-        screen.blit(title, (WIDTH // 2 - 200, 60))
+        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 10))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -499,6 +691,9 @@ def menu():
             if play_btn.is_clicked(event):
                 choose_mode()
 
+            if skins_btn.is_clicked(event):
+                skins_menu()
+
             if settings_btn.is_clicked(event):
                 settings()
 
@@ -506,7 +701,8 @@ def menu():
                 pygame.quit()
                 sys.exit()
 
-        for btn in [play_btn, settings_btn, exit_btn]:
+        # Подсветка кнопок при наведении
+        for btn in [play_btn, skins_btn, settings_btn, exit_btn]:
             btn.color = GREEN if btn.is_hover() else GRAY
             btn.draw()
 
